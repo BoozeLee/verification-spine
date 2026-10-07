@@ -97,6 +97,14 @@ Mutation testing cannot be **required** of a repo for this reason: some claims
 genuinely have no meaningful mutation, and forcing one manufactures false
 findings faster than it finds real ones.
 
+### Following this? Read [`ADOPTING.md`](ADOPTING.md)
+
+This file is the *reference* — what the rules are. `ADOPTING.md` is the
+*procedure* — a complete, copy-pasteable walkthrough of adopting on a real
+repository, with a full manifest, a full `verify.sh`, a full `mutate.sh`, the CI
+block, and a verdict→action table. This document alone is not enough to adopt
+from; jev scored it 0.58 for exactly that reason.
+
 ## What this tool does not check
 
 Stated plainly, because a checker whose boundary is undocumented will be

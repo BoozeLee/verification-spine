@@ -68,18 +68,38 @@ Ordered by leverage, not interest.
 2. **Fix `agentic-setup/templates/ADR-template.md`.** It has no `## Verification`
    section, so an ADR written faithfully from it fails R3. This is the highest
    value item here and it is a five-minute edit that unblocks every adopter.
-3. **Decide `~/workspace/foundation-ai-engine/`.** Nine vendored dependencies, no
-   source, no git history. An abandoned second foundation. Delete or mark
-   archived — currently ambiguous, which is its own problem.
+3. ~~Decide `~/workspace/foundation-ai-engine/`.~~ **RESOLVED 2026-10-07.** jev-1.13.0
+   ruled **quarantine**, 0.93 confidence / 0.95 probability (delete 0.01, keep
+   0.00) — the first >=0.9 ruling since `after_screening`, therefore acted on.
+   It held 327M across 9 `BoozeLee/*` clones with **zero source files**, no git
+   history, untouched since 2026-05-21. Moved to
+   `~/_quarantine/2026-10-07/foundation-ai-engine` with 9 `git bundle`s of every
+   dependency and `RESTORE-foundation-ai-engine.sh`. Reversible in one command.
 4. **Only then Wave 2** — teach `harness` to invoke `spine-check`, so the gate
    runner does not need a sibling.
 5. **Push this repo.** It has ten commits, no remote, and is one disk failure
    from gone. Deferred pending the user's word, like every other push.
 
-## Kill criterion, unchanged
+## Decision rule — replaces the kill criterion
 
-If `spine-check` is not used by two repositories within two weeks of adoption
-starting, the spine is killed and the per-repo ADRs are kept. jev scored this
-criterion 0.63 — a weak endorsement of a weak gate. It is retained rather than
-loosened because it is the only mechanism stopping this becoming the ninth
-unused document on this machine.
+> **Withdrawn 2026-10-07.** The "2 repos within 2 weeks" criterion scored 0.63
+> and then 0.36 with jev. Below 0.5 is *prior against, no action* — and
+> defending a mechanism twice against a below-threshold verdict is not keeping a
+> safeguard, it is keeping a rule nobody believes.
+
+**The rule now:** the spine survives while a claim it certifies is still being
+read by someone other than its author. It ends when no repo outside this one
+runs it, or when its author stops believing it — whichever comes first.
+
+There is no deadline, because a deadline rewards adoption that nobody needed.
+
+Reversible by construction: ending the spine keeps every ADR, every manifest and
+every gate. Nothing rolls back.
+
+## Ruling this plan follows
+
+`spec/CONFORMANCE-FOLLOWUP.md` — jev-1.13.0 on `conformance.md`, same day.
+Adoption guide scored **0.58** (too implicit to follow alone), kill criterion
+**0.36** (against), limits section **0.75** (candid, leave alone), keep-building
+**0.61**, wave-1 value **0.50** (borderline). The work is `spec/ADOPTING.md` — a
+walkthrough an engineer can actually follow — not more tool.
