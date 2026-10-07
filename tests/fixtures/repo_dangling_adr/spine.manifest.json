@@ -1,0 +1,7 @@
+{
+  "project": "fixture-repo",
+  "spine_version": 1,
+  "claims": [
+    { "id": "dummy-claim", "statement": "s", "verify": "./verify.sh", "expect": "exit 0", "adrs": ["9999"] }
+  ]
+}

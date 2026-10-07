@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spine-check"
+version = "0.1.0"
+description = "Proves every claim in a manifest is backed by a command that actually runs."
+requires-python = ">=3.10"
+license = "AGPL-3.0-only"
+
+[project.scripts]
+spine-check = "spine_check.cli:main"
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spine_check"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
