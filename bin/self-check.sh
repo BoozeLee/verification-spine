@@ -11,10 +11,19 @@
 # four deliberately broken repos must each be rejected. That is what makes it
 # non-vacuous, and it is what `bin/mutate-self.sh` attacks.
 set -e
-CHECK="./bin/spine-check"
-F="tests/fixtures"
 
 fail() { echo "SELF-CHECK FAILED: $1" >&2; exit 1; }
+
+# Anchored to this script, not to $PWD. A relative $CHECK silently became
+# "exit 127: not found" after step 4 cd'd away, and since every rejection test
+# is written `cmd && fail`, a missing binary looks exactly like a correct
+# rejection. Step 4 therefore never invoked spine-check at all.
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+CHECK="$HERE/spine-check"
+F="$HERE/../tests/fixtures"
+
+# Preflight: a gate that cannot run its own command must say so, not pass.
+[ -x "$CHECK" ] || fail "spine-check is not executable at $CHECK"
 
 # 1. a conformant repository must be accepted
 "$CHECK" "$F/repo_ok" --claims --adrs --ci >/dev/null || fail "a conformant repo was rejected"
