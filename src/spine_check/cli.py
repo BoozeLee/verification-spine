@@ -17,6 +17,7 @@ from pathlib import Path
 from spine_check.adrs import check_adrs
 from spine_check.models import ManifestError, load_manifest
 from spine_check.runner import Outcome, run_verify
+from spine_check.vacuity import ClaimState, check_claim_vacuity
 
 EXIT_OK = 0
 EXIT_FAILED_CLAIM = 1
@@ -42,6 +43,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="override every claim's timeout, in seconds",
     )
+    p.add_argument(
+        "--vacuity",
+        action="store_true",
+        help="run mutation campaigns: does verify notice when its subject is broken?",
+    )
     p.add_argument("--verbose", action="store_true", help="include command output in the report")
     return p
 
@@ -54,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
     # Default to both checks; an explicit flag adds one without removing the other.
     run_claims = args.claims or not args.adrs
     run_adrs = args.adrs or not args.claims
+    run_vacuity = args.vacuity
 
     try:
         manifest = load_manifest(repo_root)
@@ -79,6 +86,23 @@ def main(argv: list[str] | None = None) -> int:
                 exit_code = EXIT_FAILED_CLAIM
             elif result.outcome is Outcome.SKIP and args.ci:
                 print("    skipped — under --ci this is a failure")
+                exit_code = EXIT_FAILED_CLAIM
+
+    if run_vacuity:
+        for claim in manifest.claims:
+            if args.timeout is not None:
+                claim = replace(claim, timeout=args.timeout)
+            v = check_claim_vacuity(claim, repo_root)
+            rate = f" flip-rate {v.flip_rate}" if v.flip_rate else ""
+            print(f"  vacuity {claim.id}: {v.state.value.upper()}{rate}")
+            if args.verbose:
+                print(f"    {v.reason}")
+            if not v.restored:
+                print("    WARNING: the working tree could not be restored — check git status")
+                exit_code = EXIT_FAILED_CLAIM
+            if v.state in (ClaimState.VACUOUS, ClaimState.DENIED):
+                exit_code = EXIT_FAILED_CLAIM
+            elif v.state is ClaimState.UNPROVABLE and args.ci:
                 exit_code = EXIT_FAILED_CLAIM
 
     if run_adrs:

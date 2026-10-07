@@ -19,7 +19,7 @@ SUPPORTED_VERSION = 1
 DEFAULT_TIMEOUT = 300
 
 _TOP_LEVEL_KEYS = {"project", "spine_version", "claims"}
-_CLAIM_KEYS = {"id", "statement", "verify", "expect", "timeout", "evidence", "adrs"}
+_CLAIM_KEYS = {"id", "statement", "verify", "mutate", "expect", "timeout", "evidence", "adrs"}
 _REQUIRED_CLAIM_KEYS = ("id", "statement", "verify", "expect")
 
 
@@ -50,6 +50,7 @@ class Claim:
     timeout: int = DEFAULT_TIMEOUT
     evidence: str | None = None
     adrs: list[str] = field(default_factory=list)
+    mutate: str | None = None
 
 
 @dataclass(frozen=True)
@@ -185,6 +186,14 @@ def load_manifest(repo_root: Path) -> Manifest:
                 _line_of(raw, "evidence", i),
             )
 
+        mutate = entry.get("mutate")
+        if mutate is not None and not isinstance(mutate, str):
+            raise ManifestError(
+                "mutate must be a command string or null",
+                f"{key_path}.mutate",
+                _line_of(raw, "mutate", i),
+            )
+
         adrs = entry.get("adrs", [])
         if not isinstance(adrs, list) or not all(isinstance(a, str) for a in adrs):
             raise ManifestError(
@@ -202,6 +211,7 @@ def load_manifest(repo_root: Path) -> Manifest:
                 timeout=timeout,
                 evidence=evidence,
                 adrs=list(adrs),
+                mutate=mutate,
             )
         )
 

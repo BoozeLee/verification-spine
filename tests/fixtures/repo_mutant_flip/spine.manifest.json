@@ -1,0 +1,7 @@
+{
+  "project": "fixture-mutant-flip",
+  "spine_version": 1,
+  "claims": [
+    { "id": "coupled-claim", "statement": "The subject file is intact.", "verify": "./verify.sh", "mutate": "./mutate.sh", "expect": "exit 0", "adrs": ["0001"] }
+  ]
+}

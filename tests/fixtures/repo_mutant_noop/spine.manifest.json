@@ -1,0 +1,7 @@
+{
+  "project": "fixture-mutant-noop",
+  "spine_version": 1,
+  "claims": [
+    { "id": "noop-mutant", "statement": "The subject is intact.", "verify": "./verify.sh", "mutate": "./mutate.sh", "expect": "exit 0", "adrs": ["0001"] }
+  ]
+}

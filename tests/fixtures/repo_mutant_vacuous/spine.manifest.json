@@ -1,0 +1,7 @@
+{
+  "project": "fixture-mutant-vacuous",
+  "spine_version": 1,
+  "claims": [
+    { "id": "decoupled-claim", "statement": "The subject is correct.", "verify": "./verify.sh", "mutate": "./mutate.sh", "expect": "exit 0", "adrs": ["0001"] }
+  ]
+}
