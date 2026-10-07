@@ -1,0 +1,62 @@
+name: spine-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: suite + self-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: python3 -m pip install --quiet pytest
+
+      # The suite includes tests/test_tamper.py, which attacks the checker
+      # directly, and tests/test_vacuity.py, which requires mutation to restore
+      # the tree byte-for-byte. A leak here means a mutation outlived its run.
+      - name: Test suite
+        run: python3 -m pytest -q
+
+      - name: Confirm the tree is untouched by the mutation tests
+        run: git diff --exit-code
+
+      # Per the proof-before-claim discipline: a gate nobody has watched fail
+      # is green, not verified. This job plants a defect in its own evidence
+      # and confirms the checker goes red, then restores and confirms green.
+      - name: Negative control — tamper a claim and confirm the checker objects
+        run: |
+          set -e
+          script=tests/fixtures/repo_tamper/verify.sh
+          cp "$script" /tmp/verify.sh.bak
+          restore() { cp /tmp/verify.sh.bak "$script"; }
+          trap restore EXIT
+
+          printf '#!/bin/sh\nexit 1\n' > "$script"
+          chmod +x "$script"
+
+          if ./bin/spine-check tests/fixtures/repo_tamper --claims --adrs --ci; then
+            echo "::error::the checker passed a deliberately broken claim"
+            exit 1
+          fi
+          echo "negative control passed: a broken claim was rejected"
+
+      - name: The spine checks itself
+        run: ./bin/spine-check . --claims --adrs --ci
+
+      # --vacuity is not run here. This repo's own claims are deliberately not
+      # self-hosting (a claim cannot mutate itself), and forcing a mutation
+      # would either recurse or manufacture false findings — the
+      # equivalent-mutant trap documented in spec/conformance.md.
+      - name: Unit tests for the vacuity engine
+        run: python3 -m pytest tests/test_vacuity.py -q
