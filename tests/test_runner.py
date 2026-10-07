@@ -12,7 +12,7 @@ import pytest
 from pathlib import Path
 
 from spine_check.models import Claim
-from spine_check.runner import Outcome, run_verify
+from spine_check.runner import ClaimOutcome, Outcome, run_verify
 
 FIX = Path(__file__).parent / "fixtures"
 
@@ -102,3 +102,31 @@ def test_shell_metacharacters_never_pass_silently(cmd):
     r = run_verify(_claim(verify=cmd), FIX / "repo_ok")
     assert r.outcome is not Outcome.PASS, f"{cmd!r} must not silently pass"
     assert "shell composition" in r.stderr
+
+
+def test_noisy_hang_is_timeout_not_a_crash():
+    """B1: a command that floods stdout and then hangs must TIMEOUT, not raise.
+
+    `subprocess.TimeoutExpired` carries its output as **bytes** even when the
+    subprocess was opened with text=True — CPython stores the raw buffer before
+    decoding. Feeding those bytes straight into the str-based truncation helper
+    raised `TypeError: can't concat str to bytes`.
+
+    A crash here is worse than a false pass: in CI it looks like a flake that
+    someone re-runs, rather than a claim that failed.
+    """
+    r = run_verify(Claim(id="noisy-hang", statement="s", verify="./verify.sh",
+                         expect="exit 0", timeout=3), FIX / "repo_noisy_hang")
+    assert r.outcome is Outcome.TIMEOUT
+    assert r.exit_code is None
+    assert isinstance(r.stdout, str)
+
+
+def test_run_verify_never_raises_for_odd_commands():
+    """Every malformed or hostile command must come back as an outcome."""
+    repo = FIX / "repo_ok"
+    for cmd in ["", "   ", "nonexistent-binary-xyz", "/", "true", "'unbalanced",
+                "--", "./verify.sh && false", "$(echo hi)", "a" * 500]:
+        r = run_verify(_claim(verify=cmd, timeout=5), repo)
+        assert isinstance(r, ClaimOutcome), f"{cmd!r} produced no outcome"
+        assert isinstance(r.stdout, str) and isinstance(r.stderr, str)

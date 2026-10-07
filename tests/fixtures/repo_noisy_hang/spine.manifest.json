@@ -1,0 +1,7 @@
+{
+  "project": "fixture-noisy-hang",
+  "spine_version": 1,
+  "claims": [
+    { "id": "noisy-hang", "statement": "This produces a lot of output and then hangs.", "verify": "./verify.sh", "expect": "exit 0", "timeout": 3 }
+  ]
+}

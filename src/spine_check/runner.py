@@ -62,6 +62,22 @@ class ClaimOutcome:
         return f"{self.outcome.value} (exit {self.exit_code})"
 
 
+def _as_text(value: str | bytes | None) -> str:
+    """Normalise subprocess output to str.
+
+    `subprocess.TimeoutExpired.stdout` is **bytes** even when the subprocess was
+    opened with text=True: CPython stores the raw buffer before decoding it.
+    Every other path yields str. This normalises both so nothing downstream has
+    to care, and a crash here is worse than a wrong verdict — in CI a traceback
+    reads as a flake someone re-runs rather than a claim that failed.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
 def _truncate(text: str) -> str:
     if len(text) <= MAX_CAPTURE:
         return text
@@ -104,12 +120,13 @@ def run_verify(claim: Claim, repo_root: Path) -> ClaimOutcome:
             timeout=claim.timeout,
         )
     except subprocess.TimeoutExpired as exc:
+        # NOTE: exc.stdout/exc.stderr are bytes here, not str. See _as_text.
         return ClaimOutcome(
             claim.id,
             Outcome.TIMEOUT,
             None,
-            _truncate(exc.stdout or ""),
-            _truncate(exc.stderr or "") or f"exceeded {claim.timeout}s",
+            _truncate(_as_text(exc.stdout)),
+            _truncate(_as_text(exc.stderr)) or f"exceeded {claim.timeout}s",
         )
     except (FileNotFoundError, PermissionError, OSError) as exc:
         return ClaimOutcome(claim.id, Outcome.FAIL, None, stderr=f"{type(exc).__name__}: {exc}")
@@ -126,6 +143,6 @@ def run_verify(claim: Claim, repo_root: Path) -> ClaimOutcome:
         claim.id,
         outcome,
         code,
-        _truncate(proc.stdout or ""),
-        _truncate(proc.stderr or ""),
+        _truncate(_as_text(proc.stdout)),
+        _truncate(_as_text(proc.stderr)),
     )

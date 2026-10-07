@@ -1,2 +1,25 @@
 #!/bin/sh
-exec python3 -m spine_check "$@"
+# spine-check — prove every claim in a manifest is backed by a command that runs.
+#
+# Resolves the package relative to this script rather than depending on the
+# caller's cwd or an inherited PYTHONPATH. The previous version relied on
+# PYTHONPATH=src and died with "No module named spine_check" for anyone who had
+# not exported it — while the whole test suite stayed green, because every test
+# imported the package directly. See tests/test_entrypoint.py.
+set -e
+
+SCRIPT="$0"
+# Follow symlinks so an installed shim still finds the source tree.
+while [ -L "$SCRIPT" ]; do
+  LINK=$(readlink "$SCRIPT")
+  case "$LINK" in
+    /*) SCRIPT="$LINK" ;;
+    *)  SCRIPT="$(dirname "$SCRIPT")/$LINK" ;;
+  esac
+done
+HERE=$(cd -- "$(dirname -- "$SCRIPT")" && pwd)
+ROOT=$(dirname -- "$HERE")
+
+PYTHON="${PYTHON:-python3}"
+PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}" \
+exec "$PYTHON" -m spine_check "$@"
