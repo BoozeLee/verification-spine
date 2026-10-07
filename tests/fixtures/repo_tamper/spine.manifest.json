@@ -1,0 +1,7 @@
+{
+  "project": "fixture-tamper",
+  "spine_version": 1,
+  "claims": [
+    { "id": "tamperable-claim", "statement": "This claim can be broken and the checker notices.", "verify": "./verify.sh", "expect": "exit 0", "adrs": ["0001"] }
+  ]
+}
