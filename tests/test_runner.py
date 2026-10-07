@@ -1,0 +1,76 @@
+"""Task 2 — the verify runner (rule R2).
+
+Review Focus cases pinned here:
+  - a command that hangs forever must be TIMEOUT, never PASS
+  - exit code 5 must be SKIP, never PASS
+"""
+
+import os
+import stat
+from pathlib import Path
+
+from spine_check.models import Claim
+from spine_check.runner import Outcome, run_verify
+
+FIX = Path(__file__).parent / "fixtures"
+
+
+def _claim(verify="./verify.sh", timeout=300):
+    return Claim(
+        id="c", statement="s", verify=verify, expect="exit 0", timeout=timeout
+    )
+
+
+def _make_executable(path: Path) -> None:
+    path.chmod(path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+
+
+def test_passing_command_is_pass():
+    r = run_verify(_claim(), FIX / "repo_ok")
+    assert r.outcome is Outcome.PASS
+    assert r.exit_code == 0
+
+
+def test_exit_5_is_skip_not_pass():
+    r = run_verify(_claim(), FIX / "repo_skip")
+    assert r.outcome is Outcome.SKIP
+    assert r.exit_code == 5
+
+
+def test_hanging_command_is_timeout_not_pass():
+    r = run_verify(_claim(timeout=2), FIX / "repo_timeout")
+    assert r.outcome is Outcome.TIMEOUT
+    assert r.exit_code is None
+
+
+def test_failing_command_is_fail():
+    r = run_verify(_claim(verify="false"), FIX / "repo_ok")
+    assert r.outcome is Outcome.FAIL
+    assert r.exit_code == 1
+
+
+def test_missing_binary_is_fail_not_an_escaping_exception():
+    r = run_verify(_claim(verify="definitely-not-a-real-binary-xyz"), FIX / "repo_ok")
+    assert r.outcome is Outcome.FAIL
+
+
+def test_non_executable_verify_script_is_fail(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    script = repo / "verify.sh"
+    script.write_text("#!/bin/sh\nexit 0\n")
+    script.chmod(0o644)  # deliberately not executable
+    r = run_verify(_claim(), repo)
+    assert r.outcome is Outcome.FAIL
+
+
+def test_command_runs_with_repo_root_as_cwd():
+    r = run_verify(_claim(verify="pwd"), FIX / "repo_ok")
+    assert r.outcome is Outcome.PASS
+    assert os.path.realpath(r.stdout.strip()) == os.path.realpath(FIX / "repo_ok")
+
+
+def test_output_is_captured_and_truncated():
+    r = run_verify(_claim(verify="printf 'x%.0s' $(seq 1 9000)"), FIX / "repo_ok")
+    assert r.outcome is Outcome.PASS
+    assert len(r.stdout) <= 4000
