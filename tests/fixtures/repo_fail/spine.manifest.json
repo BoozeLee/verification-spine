@@ -1,0 +1,7 @@
+{
+  "project": "fixture-failing",
+  "spine_version": 1,
+  "claims": [
+    { "id": "will-fail", "statement": "This claim is false on purpose.", "verify": "false", "expect": "exit 0" }
+  ]
+}

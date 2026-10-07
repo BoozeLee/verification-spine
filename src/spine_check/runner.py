@@ -11,6 +11,7 @@ Only a real exit 0 is PASS.
 from __future__ import annotations
 
 import os
+import re
 import shlex
 import subprocess
 from dataclasses import dataclass
@@ -27,6 +28,13 @@ SKIP_EXIT_CODES: frozenset[int] = frozenset({5})
 #: Output is retained for the report but truncated so a runaway command cannot
 #: blow up memory or the terminal.
 MAX_CAPTURE = 4000
+
+#: Shell composition is NOT supported in v1. `shlex.split("./verify.sh && false")`
+#: yields `["./verify.sh", "&&", "false"]`, and because most scripts ignore their
+#: arguments that exits 0 — a false PASS for a claim that fails in any real shell.
+#: Rather than widen to `shell=True`, reject the command loudly and tell the
+#: author to wrap it in a script they can read.
+SHELL_METACHARACTERS = re.compile(r"&&|\|\||[;|><`]|\$\(|[&\n]")
 
 
 class Outcome(str, Enum):
@@ -68,6 +76,17 @@ def run_verify(claim: Claim, repo_root: Path) -> ClaimOutcome:
     that can be made to pass by breaking it.
     """
     repo_root = Path(repo_root)
+    if SHELL_METACHARACTERS.search(claim.verify):
+        return ClaimOutcome(
+            claim.id,
+            Outcome.FAIL,
+            None,
+            stderr=(
+                "shell composition is not supported in spine v1 — put the logic in a "
+                "committed script and point `verify` at it, e.g. \"./verify.sh\""
+            ),
+        )
+
     try:
         argv = shlex.split(claim.verify)
     except ValueError as exc:

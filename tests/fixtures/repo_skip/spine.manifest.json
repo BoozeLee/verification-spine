@@ -1,0 +1,7 @@
+{
+  "project": "fixture-skip",
+  "spine_version": 1,
+  "claims": [
+    { "id": "collects-nothing", "statement": "This claim runs but proves nothing.", "verify": "./verify.sh", "expect": "exit 0" }
+  ]
+}

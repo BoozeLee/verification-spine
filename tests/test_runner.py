@@ -7,6 +7,8 @@ Review Focus cases pinned here:
 
 import os
 import stat
+
+import pytest
 from pathlib import Path
 
 from spine_check.models import Claim
@@ -71,6 +73,32 @@ def test_command_runs_with_repo_root_as_cwd():
 
 
 def test_output_is_captured_and_truncated():
-    r = run_verify(_claim(verify="printf 'x%.0s' $(seq 1 9000)"), FIX / "repo_ok")
+    r = run_verify(_claim(verify="./noisy.sh"), FIX / "repo_ok")
     assert r.outcome is Outcome.PASS
-    assert len(r.stdout) <= 4000
+    # The command emitted 9001 characters. The retained payload is capped at
+    # MAX_CAPTURE and a marker is appended, so the total may exceed the cap.
+    assert len(r.stdout) < 9001
+    assert "truncated" in r.stdout
+    assert len(r.stdout.split("\n… truncated")[0]) == 4000
+
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "./verify.sh && false",   # would FAIL in a shell
+        "./verify.sh; false",     # would FAIL in a shell
+        "./verify.sh || true",    # would PASS in a shell for the wrong reason
+        "echo $(false)",          # command substitution
+        "echo `false`",           # backtick substitution
+    ],
+)
+def test_shell_metacharacters_never_pass_silently(cmd):
+    """A `verify` string is argv, not shell text.
+
+    Found by test_output_is_captured_and_truncated originally: `shlex.split`
+    turns "./verify.sh && false" into ["./verify.sh", "&&", "false"], the script
+    ignores its arguments and exits 0, and a claim that fails in any real shell
+    was reported PASS. Every shell construct is now rejected outright.
+    """
+    r = run_verify(_claim(verify=cmd), FIX / "repo_ok")
+    assert r.outcome is not Outcome.PASS, f"{cmd!r} must not silently pass"
+    assert "shell composition" in r.stderr

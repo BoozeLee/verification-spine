@@ -1,0 +1,7 @@
+{
+  "project": "fixture-timeout",
+  "spine_version": 1,
+  "claims": [
+    { "id": "never-returns", "statement": "This command hangs on purpose.", "verify": "./verify.sh", "expect": "exit 0", "timeout": 2 }
+  ]
+}
