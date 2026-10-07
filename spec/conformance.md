@@ -49,7 +49,7 @@ constraint."* The spine makes a house rule enforceable.
 }
 ```
 
-JSON, not YAML — see `docs/adr/0001-manifest-is-json-not-yaml.md`.
+JSON, not YAML — see `docs/adr/ADR-0001-manifest-is-json-not-yaml.md`.
 
 ### Rules `verify` must obey
 
