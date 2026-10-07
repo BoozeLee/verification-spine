@@ -8,7 +8,7 @@ evidence, not scheduled.
 jev-1.13.0 returned **`stopped`, 0.75 confidence / 0.81 probability** as the end
 goal for this work (ship 0.01 · adopt 0.01 · harden 0.17 · stop 0.81). Adopting
 on `elohim` before the screening scored 0.15; fixing the symlink leak scored 0.16.
-The reasoning is in `docs/adr/0002-the-spine-is-complete-and-rests.md`.
+The reasoning is in `docs/adr/ADR-0002-the-spine-is-complete-and-rests.md`.
 
 Building stops here. The repository stays. What survives is the
 `## Verification` section added to `agentic-setup/templates/ADR-template.md`,
@@ -19,8 +19,8 @@ which unblocks every adopter and does not depend on this tool.
 | phase | state | note |
 |---|---|---|
 | Spec | approved in conversation, **jev round 2 = NOT APPROVED (0.89)** | thesis provisional at 0.71 |
-| Wave 1 · tasks 1–5 | **done** | `spine-check` builds, self-checks, 77 tests |
-| Wave 1 · task 6 (adopt on `elohim`) | **deferred to after 2026-10-13** | jev `after_screening` 0.95 |
+| Wave 1 · tasks 1–5 | **done** | `spine-check` builds, self-checks, 90 tests |
+| Wave 1 · task 6 (adopt on `elohim`) | **done 2026-10-07** | committed as `96d59b5`; supersedes the earlier `after_screening` 0.95 deferral |
 | Wave 2 (`harness` integration) | conditional | not scheduled |
 | Wave 3 (remaining repos) | conditional | not scheduled |
 
@@ -72,13 +72,14 @@ earlier assertion would have caught:
 
 Ordered by leverage, not interest.
 
-1. **After 2026-10-13 — adopt on `elohim`.** Suite is green (319 passed,
-   1 skipped), so the gate rule permits it. Two claims, two ADRs, one CI job.
-   Expect the `verify` command to need to be `python3 tests/test_all.py`, not
-   bare `pytest`, because that is what elohim's CI actually runs.
-2. **Fix `agentic-setup/templates/ADR-template.md`.** It has no `## Verification`
-   section, so an ADR written faithfully from it fails R3. This is the highest
-   value item here and it is a five-minute edit that unblocks every adopter.
+1. ~~**After 2026-10-13 — adopt on `elohim`.**~~ **DONE 2026-10-07**, early.
+   Gate rule checked first (`python3 tests/test_all.py` → `ALL_SKILLS_PASS`),
+   then two claims and two ADRs committed as `96d59b5`. The `verify` command
+   did have to be `python3 tests/test_all.py`, not bare `pytest`, because that
+   is what elohim's CI actually runs.
+2. ~~**Fix `agentic-setup/templates/ADR-template.md`.**~~ **DONE 2026-10-07.**
+   It now carries a `## Verification` section, proven both ways: a new-shape ADR
+   exits 0, an old-shape ADR exits 2, a superseded ADR is exempt and exits 0.
 3. ~~Decide `~/workspace/foundation-ai-engine/`.~~ **RESOLVED 2026-10-07.** jev-1.13.0
    ruled **quarantine**, 0.93 confidence / 0.95 probability (delete 0.01, keep
    0.00) — the first >=0.9 ruling since `after_screening`, therefore acted on.
@@ -86,10 +87,18 @@ Ordered by leverage, not interest.
    history, untouched since 2026-05-21. Moved to
    `~/_quarantine/2026-10-07/foundation-ai-engine` with 9 `git bundle`s of every
    dependency and `RESTORE-foundation-ai-engine.sh`. Reversible in one command.
-4. **Only then Wave 2** — teach `harness` to invoke `spine-check`, so the gate
-   runner does not need a sibling.
-5. **Push this repo.** It has ten commits, no remote, and is one disk failure
-   from gone. Deferred pending the user's word, like every other push.
+4. **Run `spine-check` in `elohim`'s CI — BLOCKED, needs a human.** `elohim` is
+   public, this repo is private, and jev-1.13.0 ruled `hold` (0.98) on the PyPI
+   route. Public CI cannot clone a private repo without a PAT, and a PAT in
+   public CI is a bad design. Nothing is broken: elohim's own gate already
+   passes and the job-to-add is written down in its `ADR-0001`. Full statement
+   of the blocker and the three escape hatches is in [PLANS.md](PLANS.md).
+5. ~~**Push this repo.**~~ **DONE 2026-10-07**, on the user's word. Private remote
+   `BoozeLee/verification-spine`, `master` → `origin/master`, remote HEAD
+   identical to local. Private, not public: the tool is AGPL and has not been
+   vetted for public release. `agentic-setup` went the same way.
+6. **Only then Wave 2** — teach `harness` to invoke `spine-check`, so the gate
+   runner does not need a sibling. Still conditional, still unscheduled.
 
 ## Decision rule — replaces the kill criterion
 
