@@ -20,6 +20,15 @@
       "adrs": [
         "0001"
       ]
+    },
+    {
+      "id": "the-closing-ruling-is-recorded",
+      "statement": "ADR-0002 records why the spine rests, with jev's scores and the standing rule that produced them.",
+      "verify": "./bin/check-closing-adr.sh",
+      "expect": "exit 0",
+      "adrs": [
+        "0002"
+      ]
     }
   ]
 }

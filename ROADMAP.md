@@ -3,6 +3,17 @@
 Built 2026-10-07. Wave 1 only. Everything below Wave 1 is conditional on
 evidence, not scheduled.
 
+## CLOSED 2026-10-07
+
+jev-1.13.0 returned **`stopped`, 0.75 confidence / 0.81 probability** as the end
+goal for this work (ship 0.01 · adopt 0.01 · harden 0.17 · stop 0.81). Adopting
+on `elohim` before the screening scored 0.15; fixing the symlink leak scored 0.16.
+The reasoning is in `docs/adr/0002-the-spine-is-complete-and-rests.md`.
+
+Building stops here. The repository stays. What survives is the
+`## Verification` section added to `agentic-setup/templates/ADR-template.md`,
+which unblocks every adopter and does not depend on this tool.
+
 ## Status
 
 | phase | state | note |
