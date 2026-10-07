@@ -151,3 +151,33 @@ def test_denied_command_short_circuits_before_running_anything():
     claim = Claim(id="trivial", statement="s", verify="true", expect="exit 0", timeout=10)
     result = check_claim_vacuity(claim, repo)
     assert result.state is ClaimState.DENIED, result.reason
+
+def test_mutation_that_creates_directories_leaves_nothing_behind(tmp_path):
+    """BUG 5: restore cleaned files but left empty directory shells.
+
+    tree_fingerprint hashes files only, so a leftover empty directory is
+    invisible to it — the tree looked restored while carrying debris that
+    accumulates across runs.
+    """
+    from spine_check.vacuity import restore_tree, snapshot_tree
+
+    (tmp_path / "keep.py").write_text("x = 1\n")
+    snapshot = snapshot_tree(tmp_path)
+
+    (tmp_path / "created" / "deep").mkdir(parents=True)
+    (tmp_path / "created" / "deep" / "f.txt").write_text("new\n")
+
+    assert restore_tree(tmp_path, snapshot) is True
+    assert not (tmp_path / "created").exists(), "empty directory shells survived restore"
+
+
+def test_mutation_that_deletes_a_file_restores_it(tmp_path):
+    from spine_check.vacuity import restore_tree, snapshot_tree
+
+    subject = tmp_path / "subject.py"
+    subject.write_text('SUBJECT = "intact"\n')
+    snapshot = snapshot_tree(tmp_path)
+
+    subject.unlink()
+    assert restore_tree(tmp_path, snapshot) is True
+    assert subject.read_text() == 'SUBJECT = "intact"\n'

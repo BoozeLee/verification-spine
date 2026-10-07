@@ -4,12 +4,13 @@
   "claims": [
     {
       "id": "the-spine-checks-itself",
-      "statement": "The spine's own suite passes, including the tamper tests that prove the checker detects a broken claim.",
+      "statement": "spine-check accepts a conformant repository and rejects a failing claim, a vacuous claim, a `true`-backed claim, and an ADR with no Verification section.",
       "verify": "./bin/self-check.sh",
       "expect": "exit 0",
       "adrs": [
         "0001"
-      ]
+      ],
+      "mutate": "./bin/mutate-self.sh"
     },
     {
       "id": "shell-composition-is-never-a-silent-pass",

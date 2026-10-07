@@ -28,6 +28,7 @@ changed. A no-op mutate yields UNPROVABLE, never VACUOUS.
 from __future__ import annotations
 
 import hashlib
+import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -160,7 +161,13 @@ def snapshot_tree(root: Path) -> dict[str, bytes]:
 
 
 def restore_tree(root: Path, snapshot: dict[str, bytes]) -> bool:
-    """Put the tree back exactly as it was. Returns False if that failed."""
+    """Put the tree back exactly as it was. Returns False if that failed.
+
+    Files the mutation created are unlinked; directories it created are pruned
+    bottom-up. Pruning matters because `tree_fingerprint` hashes files only, so
+    an empty directory left behind is invisible to the restore check and would
+    accumulate across runs as unremarked debris.
+    """
     root = Path(root)
     try:
         for rel in _iter_files(root):
@@ -171,9 +178,24 @@ def restore_tree(root: Path, snapshot: dict[str, bytes]) -> bool:
             dest = root / rel_str
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(data)
+        _prune_empty_dirs(root)
     except OSError:
         return False
     return tree_fingerprint(root) == tree_fingerprint_of(snapshot)
+
+
+def _prune_empty_dirs(root: Path) -> None:
+    """Remove empty directories under `root`, deepest first. Never removes `root`."""
+    root = Path(root)
+    for dirpath, dirnames, filenames in os.walk(root, topdown=False):
+        d = Path(dirpath)
+        if d == root:
+            continue
+        try:
+            if not any(d.iterdir()):
+                d.rmdir()
+        except OSError:
+            pass
 
 
 def tree_fingerprint_of(snapshot: dict[str, bytes]) -> str:
