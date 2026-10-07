@@ -104,6 +104,17 @@ def _iter_files(root: Path):
         yield path
 
 
+def _iter_symlinks(root: Path) -> list[Path]:
+    """Symlinks under `root`, excluded from the snapshot on purpose.
+
+    A symlink's *target* is not the repository's content, and a mutation can
+    plant one pointing anywhere. They are therefore never fingerprinted or
+    snapshotted — and never written through during restore — only unlinked.
+    """
+    root = Path(root)
+    return sorted(p for p in root.rglob("*") if p.is_symlink())
+
+
 def tree_fingerprint(root: Path) -> str:
     """A stable hash of every non-bookkeeping file under `root`.
 
@@ -170,12 +181,21 @@ def restore_tree(root: Path, snapshot: dict[str, bytes]) -> bool:
     """
     root = Path(root)
     try:
+        # Symlinks first, and unconditionally: a mutation may have planted one
+        # pointing at a file this restore is about to write. Unlinking before
+        # any write is what stops the write going through the link.
+        for link in _iter_symlinks(root):
+            link.unlink()
         for rel in _iter_files(root):
             rel_str = str(rel.relative_to(root))
             if rel_str not in snapshot:
                 rel.unlink()  # created by the mutation
         for rel_str, data in snapshot.items():
             dest = root / rel_str
+            # A snapshot entry could itself be a path the mutation turned into
+            # a symlink; unlink before writing so we never traverse one.
+            if dest.is_symlink():
+                dest.unlink()
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(data)
         _prune_empty_dirs(root)

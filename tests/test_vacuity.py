@@ -181,3 +181,40 @@ def test_mutation_that_deletes_a_file_restores_it(tmp_path):
     subject.unlink()
     assert restore_tree(tmp_path, snapshot) is True
     assert subject.read_text() == 'SUBJECT = "intact"\n'
+
+
+def test_mutation_that_creates_a_symlink_does_not_leak_it(tmp_path):
+    """BUG 6: _iter_files skips symlinks, so restore_tree never deleted one.
+
+    jev scored fixing this 0.16 — it called removing symlinks the wrong fix.
+    The owner overrode that. The risk is real: a mutation that plants a symlink
+    to /etc/passwd leaves it in the tree after restore, and a later restore
+    writing through it would overwrite the wrong file.
+    """
+    from spine_check.vacuity import restore_tree, snapshot_tree
+
+    (tmp_path / "keep.py").write_text("x = 1\n")
+    snapshot = snapshot_tree(tmp_path)
+
+    outside = tmp_path.parent / "outside-target.txt"
+    outside.write_text("target\n")
+    (tmp_path / "escape").symlink_to(outside)
+
+    assert restore_tree(tmp_path, snapshot) is True
+    assert not (tmp_path / "escape").exists(), "symlink created by mutate survived restore"
+    assert not (tmp_path / "escape").is_symlink()
+
+
+def test_symlink_created_by_mutation_is_removed_not_followed(tmp_path):
+    """The symlink must be unlinked, never written through."""
+    from spine_check.vacuity import restore_tree, snapshot_tree
+
+    target = tmp_path.parent / "must-not-be-written.txt"
+    target.write_text("original\n")
+    (tmp_path / "keep.py").write_text("x = 1\n")
+    snapshot = snapshot_tree(tmp_path)
+
+    (tmp_path / "link").symlink_to(target)
+    restore_tree(tmp_path, snapshot)
+
+    assert target.read_text() == "original\n", "restore wrote THROUGH a symlink"

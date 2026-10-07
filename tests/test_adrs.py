@@ -43,3 +43,10 @@ def test_repo_with_no_adr_directory_is_not_a_violation():
 def test_verification_section_with_only_a_placeholder_is_a_violation():
     v = check_adrs(FIX / "repo_placeholder_adr", load_manifest(FIX / "repo_ok"))
     assert any("Verification" in x.reason for x in v)
+
+def test_both_adr_filename_conventions_are_recognised():
+    """agentic-setup globs ADR-*.md; this repo produced 0001-*.md. Both count."""
+    from spine_check.adrs import _existing_adr_ids
+
+    ids = _existing_adr_ids(FIX / "repo_mixed_adr" / "docs" / "adr")
+    assert "0001" in ids and "0002" in ids, ids

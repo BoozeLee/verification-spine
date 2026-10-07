@@ -85,12 +85,21 @@ def _verification_body(text: str) -> list[str]:
 
 
 def _existing_adr_ids(adr_dir: Path) -> set[str]:
-    """Numeric ids (`0001`) of every ADR file present."""
+    """Numeric ids (`0001`) of every ADR file present.
+
+    Accepts both naming conventions in use on this machine:
+      docs/adr/0001-slug.md      — what this repo produced
+      docs/adr/ADR-0001-slug.md  — what agentic-setup/session-close.sh globs
+
+    They disagreed until 2026-10-07: the gate required `ADR-*.md` while this
+    module matched only leading digits, so an ADR the gate recognised was
+    invisible here and any claim referencing it read as dangling.
+    """
     ids: set[str] = set()
     if not adr_dir.is_dir():
         return ids
     for md in sorted(adr_dir.glob("*.md")):
-        match = re.match(r"^(\d+)", md.stem)
+        match = re.match(r"^(?:ADR-)?(\d+)", md.stem, re.IGNORECASE)
         if match:
             ids.add(match.group(1))
     return ids
