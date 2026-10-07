@@ -1,0 +1,24 @@
+{
+  "project": "verification-spine",
+  "spine_version": 1,
+  "claims": [
+    {
+      "id": "the-spine-checks-itself",
+      "statement": "The spine's own suite passes, including the tamper tests that prove the checker detects a broken claim.",
+      "verify": "./bin/self-check.sh",
+      "expect": "exit 0",
+      "adrs": [
+        "0001"
+      ]
+    },
+    {
+      "id": "shell-composition-is-never-a-silent-pass",
+      "statement": "A verify command containing shell metacharacters fails instead of being reinterpreted by a shell.",
+      "verify": "./bin/self-check-shell-metachars.sh",
+      "expect": "exit 0",
+      "adrs": [
+        "0001"
+      ]
+    }
+  ]
+}
