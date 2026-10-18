@@ -142,3 +142,51 @@ its run because restore used `git checkout`, which does nothing for untracked fi
   overridden by the user). Recorded as a chosen state in ADR-0002.
 - `bundle restore` is a local-disk drill. No copy of this repository has ever left
   the machine under anything other than today's push.
+---
+
+## 005 — 2026-10-17 (release engineering, branch `release/v0.1.0`)
+
+**Task:** ship 0.1.0 per `spec/release-v0.1.0.md` and ADR-0003. Release-only scope; ADR-0002 stands.
+
+### Baseline on `master` (before any change)
+
+| Command | Exit | Observed |
+|---|---|---|
+| `pytest -q` | `0` | `90 passed in 7.87s` |
+| `./bin/spine-check . --claims --adrs --ci` | `0` | 3 claims PASS, `spine-check: OK` |
+| `gitleaks detect --source . --redact` | `0` | `no leaks found` (206 KB scanned) |
+
+### After the release claim landed
+
+| Command | Exit | Observed |
+|---|---|---|
+| `./bin/spine-check . --claims --adrs --ci` | `0` | 4 claims PASS — including `release-artifact-installs-and-behaves` (first run: **FAIL**, see finding below) |
+| `./bin/spine-check . --vacuity --claims` | `0` | release claim `VERIFIED flip-rate 1/1`; mutation corrupted `pyproject.toml`, build failed, verdict flipped, tree restored byte-identical |
+| `pytest -q` | `0` | `90 passed in 7.87s` |
+| `gitleaks detect --source . --redact` | `0` | `no leaks found` |
+| `uvx semgrep scan --config p/python --quiet --error .` | `0` | no findings (local `~/.local/bin/semgrep` is an orphaned pipx shim; its venv is gone) |
+
+### Finding: the first version of the release claim was wrong, and the gate said so
+
+`bin/release-check.sh` originally used `tests/fixtures/repo_tamper` as its
+negative control without planting a defect. `repo_tamper` is **conformant by
+default** — its claim passes until a tamper test breaks it on purpose — so the
+installed wheel correctly accepted it and the claim read `FAIL (exit 1)`.
+The checker was right; the claim's evidence was wrong. Fixed by using
+`repo_fail` (failing claim) and `repo_bad_adrs` (unenforced ADR) as the
+negative controls. This is the tool catching its own release path — recorded
+rather than smoothed over.
+
+### Limits
+
+- Local verification only. Neither workflow has executed on a hosted runner;
+  `release.yml` is verifiable only after the approved push and tag.
+- Commits are staged but unsigned so far: `commit.gpgsign=true` with an SSH
+  key whose passphrase is not available to this agent shell (no identities in
+  the session agent). Signing happens once the key is loaded in the user's
+  session (`ssh-add ~/.ssh/id_ed25519`).
+
+### Rollback
+
+`git checkout master && git branch -D release/v0.1.0` — everything lives on the
+branch; `master` is untouched.
