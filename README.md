@@ -54,6 +54,11 @@ git clone <this repo> && cd verification-spine
 uv tool install .
 ```
 
+Versioned sdist and wheel artifacts are attached to each
+[GitHub release](https://github.com/BoozeLee/verification-spine/releases);
+`pip install spine_check-*.whl` from there. Changes per release are tracked in
+[CHANGELOG.md](CHANGELOG.md).
+
 The shim resolves the package from its own location, so it works from any
 directory without `PYTHONPATH`.
 
@@ -111,7 +116,7 @@ then `docs/adr/`, then wire the CLI into CI.
 ## Development
 
 ```bash
-python3 -m pytest -q     # 77 tests
+python3 -m pytest -q     # 90 tests
 ./bin/spine-check . --claims --adrs --vacuity --ci
 ```
 
