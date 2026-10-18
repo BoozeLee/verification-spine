@@ -11,9 +11,14 @@ this file alone, without reading a single transcript.
 <!-- Status vocabulary — use these words, they are what session-close.sh greps for:
      planned | in progress | blocked (reason) | complete -->
 
-No implementation task is currently active.
+**Release engineering is on branch `release/v0.1.0`, awaiting the owner's
+push/merge/tag decisions** (spec: `spec/release-v0.1.0.md`, decision:
+ADR-0003). Building stays stopped per ADR-0002; the branch only makes the
+resting tool distributable — a release claim, CHANGELOG, README corrections,
+and a tagged-release workflow with pinned actions.
 
-That is a decision, not an oversight. jev-1.13.0 returned **`stopped`** as the end
+No feature implementation task is currently active. That, too, is a
+decision, not an oversight. jev-1.13.0 returned **`stopped`** as the end
 goal for this work (stop 0.81; ship 0.01 · adopt 0.01 · harden 0.17), recorded in
 [ADR-0002](docs/adr/ADR-0002-the-spine-is-complete-and-rests.md). Building stopped
 there deliberately. Wave 2 (`harness` integration) and Wave 3 (remaining repos) are
