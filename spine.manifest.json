@@ -29,6 +29,17 @@
       "adrs": [
         "0002"
       ]
+    },
+    {
+      "id": "release-artifact-installs-and-behaves",
+      "statement": "A clean build produces a wheel that installs into an empty environment and whose spine-check rejects a broken repository while accepting a conformant one.",
+      "verify": "./bin/release-check.sh",
+      "mutate": "./bin/mutate-release.sh",
+      "expect": "exit 0",
+      "timeout": 600,
+      "adrs": [
+        "0003"
+      ]
     }
   ]
 }
