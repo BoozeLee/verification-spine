@@ -14,6 +14,7 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+from spine_check import __version__
 from spine_check.adrs import check_adrs
 from spine_check.models import ManifestError, load_manifest
 from spine_check.runner import Outcome, run_verify
@@ -30,6 +31,9 @@ def build_parser() -> argparse.ArgumentParser:
         description="Prove every claim in a manifest is backed by a command that runs.",
     )
     p.add_argument("repo", nargs="?", default=".", help="repository root (default: cwd)")
+    p.add_argument(
+        "--version", action="version", version=f"spine-check {__version__}"
+    )
     p.add_argument(
         "--ci",
         action="store_true",

@@ -8,6 +8,9 @@ Exit code contract:
 
 from pathlib import Path
 
+import pytest
+
+from spine_check import __version__
 from spine_check.cli import main
 
 FIX = Path(__file__).parent / "fixtures"
@@ -54,3 +57,12 @@ def test_timeout_flag_overrides_claim_timeout():
 def test_output_mentions_every_claim_id(capsys):
     main([str(FIX / "repo_ok"), "--claims"])
     assert "dummy-claim" in capsys.readouterr().out
+
+
+def test_version_flag_prints_the_package_version(capsys):
+    """A released CLI must be able to say what it is, and the number must come
+    from the package itself — never a second hardcoded copy."""
+    with pytest.raises(SystemExit) as excinfo:
+        main(["--version"])
+    assert excinfo.value.code == 0
+    assert __version__ in capsys.readouterr().out

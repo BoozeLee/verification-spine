@@ -3,6 +3,23 @@
 All notable changes to `spine-check`. Format follows Keep a Changelog;
 versioning is semver.
 
+## [0.1.1] - 2026-10-18
+
+Packaging-quality release: no behavior changes to checking.
+
+### Added
+
+- `spine-check --version` — the version comes from the package itself
+  (`src/spine_check/__init__.py`), which is now the single source consumed by
+  pyproject (hatchling dynamic version), the wheel metadata, and the CLI.
+- Full PyPI-grade package metadata: readme, author, keywords, classifiers,
+  and project URLs (repository, changelog, releases, issue tracker).
+- `SECURITY.md` and `CONTRIBUTING.md`.
+
+### Changed
+
+- README no longer hardcodes the test count (it drifted twice: 77 → 90 → 91).
+
 ## [0.1.0] - 2026-10-17
 
 First release. Built 2026-10-07 and deliberately rested (ADR-0002); released

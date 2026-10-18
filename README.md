@@ -116,7 +116,7 @@ then `docs/adr/`, then wire the CLI into CI.
 ## Development
 
 ```bash
-python3 -m pytest -q     # 90 tests
+python3 -m pytest -q     # the whole suite
 ./bin/spine-check . --claims --adrs --vacuity --ci
 ```
 

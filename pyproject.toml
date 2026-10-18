@@ -4,10 +4,37 @@ build-backend = "hatchling.build"
 
 [project]
 name = "spine-check"
-version = "0.1.0"
+# Single source of truth for the version: src/spine_check/__init__.py.
+dynamic = ["version"]
 description = "Proves every claim in a manifest is backed by a command that actually runs."
+readme = "README.md"
 requires-python = ">=3.10"
 license = "AGPL-3.0-only"
+authors = [{ name = "Kiliaan" }]
+keywords = ["verification", "testing", "ci", "adr", "evidence", "mutation-testing", "quality-assurance"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Testing",
+]
+
+[project.urls]
+Homepage = "https://github.com/BoozeLee/verification-spine"
+Repository = "https://github.com/BoozeLee/verification-spine"
+Changelog = "https://github.com/BoozeLee/verification-spine/blob/master/CHANGELOG.md"
+"Release Notes" = "https://github.com/BoozeLee/verification-spine/releases"
+"Bug Tracker" = "https://github.com/BoozeLee/verification-spine/issues"
+
+[tool.hatch.version]
+path = "src/spine_check/__init__.py"
 
 [project.scripts]
 spine-check = "spine_check.cli:main"
