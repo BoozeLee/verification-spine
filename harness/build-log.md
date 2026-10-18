@@ -190,3 +190,23 @@ rather than smoothed over.
 
 `git checkout master && git branch -D release/v0.1.0` — everything lives on the
 branch; `master` is untouched.
+
+### Hosted verification (closing the Limits above) — 2026-10-18
+
+| run | trigger | result | observed |
+|---|---|---|---|
+| `release.yml` on tag `v0.1.0` | tag push | **success** | release `v0.1.0` published, not draft, assets `spine_check-0.1.0-py3-none-any.whl` (26,868 B) + `spine_check-0.1.0.tar.gz` (74,072 B) |
+| `spine-check.yml` on `master` | push | **success ×3** | py 3.10 / 3.12 / 3.13 each green (~25s): suite, tamper negative control, self-check incl. the release claim — first hosted execution of this workflow ever |
+
+Two facts worth keeping:
+
+- The first CI attempt failed in 3s with **"job was not started because recent
+  account payments have failed or your spending limit needs to be increased"**
+  — it fired while the repository was still private (billed minutes). The
+  release run that followed succeeded because the repo had just gone public
+  (free minutes). A CI failure with zero steps executed is a billing signal,
+  not a code signal.
+- The review before push found the workflow triggered on `branches: [main]`
+  while the default branch is `master` — CI could never have run on a push.
+  Fixed in `d27cb63`. Known cosmetic warning: both pinned actions target
+  Node 20 and are force-upgraded to Node 24 by GitHub.
