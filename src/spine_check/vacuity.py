@@ -44,6 +44,12 @@ TRIVIAL_COMMANDS = frozenset({":", "true", "echo", "exit", "pass", "nop"})
 #: Directories excluded from the tree fingerprint — bookkeeping, not subject.
 _FINGERPRINT_SKIP = {".git", "__pycache__", ".pytest_cache", ".venv", "node_modules"}
 
+#: Upper bound on bytes snapshot_tree() will hold in memory during a mutation
+#: campaign. A repository over budget cannot honestly conclude vacuity —
+#: snapshotting it could exhaust the machine — so the verdict is UNPROVABLE,
+#: never VACUOUS, and mutate never runs.
+SNAPSHOT_MAX_BYTES = 64 * 1024 * 1024
+
 
 class ClaimState(str, Enum):
     #: verify passed AND flipped when the subject was deliberately broken.
@@ -113,6 +119,11 @@ def _iter_symlinks(root: Path) -> list[Path]:
     """
     root = Path(root)
     return sorted(p for p in root.rglob("*") if p.is_symlink())
+
+
+def _tree_size(root: Path) -> int:
+    """Total bytes snapshot_tree() would hold for `root` (cheap stat walk)."""
+    return sum(p.stat().st_size for p in _iter_files(root))
 
 
 def tree_fingerprint(root: Path) -> str:
@@ -254,6 +265,16 @@ def check_claim_vacuity(claim: Claim, repo_root: Path) -> VacuityResult:
             claim.id,
             ClaimState.GREEN,
             "verify passed; no `mutate` declared, so it has never been seen to fail",
+            baseline=baseline,
+        )
+
+    size = _tree_size(repo_root)
+    if size > SNAPSHOT_MAX_BYTES:
+        return VacuityResult(
+            claim.id,
+            ClaimState.UNPROVABLE,
+            f"repository is {size} bytes, over the {SNAPSHOT_MAX_BYTES}-byte "
+            "snapshot budget — vacuity cannot be concluded without risking memory",
             baseline=baseline,
         )
 

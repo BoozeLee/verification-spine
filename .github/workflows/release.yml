@@ -6,6 +6,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build-and-release:
@@ -43,6 +45,13 @@ jobs:
             exit 1
           fi
           /tmp/spine-smoke/bin/spine-check tests/fixtures/repo_ok --claims --adrs --ci > /dev/null
+
+      # Build provenance (SLSA): binds these exact artifacts to this workflow
+      # run — verifiable later with
+      # `gh attestation verify <artifact> -R BoozeLee/verification-spine`.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/spine_check-*.whl"
 
       # PyPI publishing is intentionally absent. jev ruled `hold` (0.98) and
       # ADR-0003 keeps it that way until reversed in writing. When that happens,

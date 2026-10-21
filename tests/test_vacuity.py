@@ -218,3 +218,22 @@ def test_symlink_created_by_mutation_is_removed_not_followed(tmp_path):
     restore_tree(tmp_path, snapshot)
 
     assert target.read_text() == "original\n", "restore wrote THROUGH a symlink"
+
+
+def test_snapshot_budget_refuses_oversized_repositories(tmp_path, monkeypatch):
+    """Resource-exhaustion guard: snapshot_tree() holds every byte in RAM, so a
+    huge repository under --vacuity could exhaust memory. Over budget the only
+    honest verdict is UNPROVABLE — 'cannot conclude', never 'vacuous' — and
+    mutate must never run."""
+    import spine_check.vacuity as vac
+
+    monkeypatch.setattr(vac, "SNAPSHOT_MAX_BYTES", 10)
+    repo = FIX / "repo_mutant_flip"
+    before = vac.tree_fingerprint(repo)
+
+    claim = load_manifest(repo).claims[0]
+    result = vac.check_claim_vacuity(claim, repo)
+
+    assert result.state is ClaimState.UNPROVABLE, result.reason
+    assert "snapshot budget" in result.reason
+    assert vac.tree_fingerprint(repo) == before, "no mutation may run over budget"
