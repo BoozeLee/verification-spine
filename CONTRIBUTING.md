@@ -32,6 +32,21 @@ python3 -m pytest -q
 6. **Commit style**: imperative subject line, body explains why. The changelog
    (`CHANGELOG.md`) records every released change.
 
+## Compatibility policy
+
+The promise CI integrators build on:
+
+- **Exit codes are contract**: `0` all-pass, `1` failed/vacuous/denied/skipped,
+  `2` unusable manifest or ADR violation. They change only in a major version.
+- **`spine_version: 1` manifests are supported for all of 1.x.** New manifest
+  keys are additive; nothing existing changes meaning.
+- **CLI flags are additive in minor releases.** A flag is removed only in a
+  major version, and only after being announced as deprecated for at least one
+  minor release in `CHANGELOG.md`.
+- Reports (`verified` / `green` / `vacuous` / `unprovable` / `denied` /
+  `broken`) may gain new states in a minor; existing states never change
+  meaning.
+
 ## Releasing
 
 Owned by the maintainer. A `v*` tag triggers the release workflow, which

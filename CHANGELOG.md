@@ -3,9 +3,10 @@
 All notable changes to `spine-check`. Format follows Keep a Changelog;
 versioning is semver.
 
-## [0.1.1] - 2026-10-18
+## [0.1.1] - 2026-10-21
 
-Packaging-quality release: no behavior changes to checking.
+Packaging-quality release: no behavior changes to checking, one hardening
+change to `--vacuity` (below).
 
 ### Added
 
@@ -14,11 +15,21 @@ Packaging-quality release: no behavior changes to checking.
   pyproject (hatchling dynamic version), the wheel metadata, and the CLI.
 - Full PyPI-grade package metadata: readme, author, keywords, classifiers,
   and project URLs (repository, changelog, releases, issue tracker).
-- `SECURITY.md` and `CONTRIBUTING.md`.
+- `SECURITY.md`, `CONTRIBUTING.md` (including the compatibility policy), and
+  `CODE_OF_CONDUCT.md`.
+- Build provenance: the release workflow now attests the wheel with
+  `actions/attest-build-provenance` (SLSA) — verify a download with
+  `gh attestation verify <file> -R BoozeLee/verification-spine`.
 
 ### Changed
 
 - README no longer hardcodes the test count (it drifted twice: 77 → 90 → 91).
+
+### Hardened
+
+- `--vacuity` refuses to snapshot repositories over 64 MiB: the only honest
+  verdict is `UNPROVABLE`, and `mutate` never runs. Previously an oversized
+  repository could exhaust memory during a mutation campaign.
 
 ## [0.1.0] - 2026-10-17
 
